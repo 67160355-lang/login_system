@@ -1,4 +1,7 @@
 <?php
+session_start();
+ini_set('display_errors', 1); // à¹à¸ªà¸”à¸‡à¸‚à¹‰à¸­à¸œà¸´à¸”à¸à¸¥à¸²à¸”à¸šà¸™à¸ˆà¸­
+error_reporting(E_ALL); // à¸£à¸²à¸¢à¸‡à¸²à¸™à¸‚à¹‰à¸­à¸œà¸´à¸”à¸à¸¥à¸²à¸”à¸—à¸¸à¸à¸›à¸£à¸°à¹€à¸ à¸—
 require __DIR__ . '/config_mysqli.php'; 
 require __DIR__ . '/csrf.php'; 
 
@@ -19,14 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('register.php');
 }
 
-// 1. µÃÇ¨ÊÍº CSRF
-if (!csrf_validate($_POST['csrf'] ?? '')) {
+if (!csrf_check($_POST['csrf'] ?? '')) {
     set_flash_message('CSRF token validation failed. Please try again.');
     redirect('register.php');
 }
 
-// 2. ÃÑº¤èÒáÅĞµÃÇ¨ÊÍº Validation
-$name = trim($_POST['name'] ?? ''); // ¤èÒ $name ¹Õé¨ĞÁÒ¨Ò¡¿ÍÃìÁ (Full Name)
+$name = trim($_POST['name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $password = $_POST['password'] ?? '';
 $password_confirm = $_POST['password_confirm'] ?? '';
@@ -51,7 +52,7 @@ if ($password !== $password_confirm) {
     redirect('register.php');
 }
 
-// 3. µÃÇ¨ÊÍº Email «éÓ
+// 3. ï¿½ï¿½Ç¨ï¿½Íº Email ï¿½ï¿½ï¿½
 try {
     $stmt = $mysqli->prepare("SELECT 1 FROM users WHERE email = ? LIMIT 1");
     $stmt->bind_param("s", $email);
@@ -65,30 +66,30 @@ try {
     }
     $stmt->close();
 
-    // 4. ¶éÒ·Ø¡ÍÂèÒ§¼èÒ¹ = ºÑ¹·Ö¡Å§°Ò¹¢éÍÁÙÅ
+    // 4. ï¿½ï¿½Ò·Ø¡ï¿½ï¿½ï¿½Ò§ï¿½ï¿½Ò¹ = ï¿½Ñ¹ï¿½Ö¡Å§ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-    // [MODIFIED] á¡éä¢ "full_name" à»ç¹ "display_name" ãËéµÃ§¡ÑºµÒÃÒ§
+    // [MODIFIED] ï¿½ï¿½ï¿½ "full_name" ï¿½ï¿½ "display_name" ï¿½ï¿½ï¿½Ã§ï¿½Ñºï¿½ï¿½ï¿½Ò§
     $stmt = $mysqli->prepare("INSERT INTO users (display_name, email, password_hash) VALUES (?, ?, ?)");
     
-    // $name (¨Ò¡¿ÍÃìÁ) ¨Ğ¶Ù¡¼Ù¡¡Ñº display_name (ã¹µÒÃÒ§)
+    // $name (ï¿½Ò¡ï¿½ï¿½ï¿½ï¿½ï¿½) ï¿½Ğ¶Ù¡ï¿½Ù¡ï¿½Ñº display_name (ã¹µï¿½ï¿½Ò§)
     $stmt->bind_param("sss", $name, $email, $password_hash); 
     
     if ($stmt->execute()) {
-        // ÊÓàÃç¨
+        // ï¿½ï¿½ï¿½ï¿½ï¿½
         set_success_flash_message('Registration successful! You can now sign in.');
         $stmt->close();
         $mysqli->close();
         redirect('login.php');
     } else {
-        // äÁèÊÓàÃç¨ (àªè¹ °Ò¹¢éÍÁÙÅÁÕ»Ñ­ËÒ)
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»Ñ­ï¿½ï¿½)
         set_flash_message('An error occurred during registration. Please try again.');
         $stmt->close();
         redirect('register.php');
     }
 
 } catch (mysqli_sql_exception $e) {
-    // ¨Ñ´¡ÒÃ¢éÍ¼Ô´¾ÅÒ´
+    // ï¿½Ñ´ï¿½ï¿½Ã¢ï¿½Í¼Ô´ï¿½ï¿½Ò´
     set_flash_message('Database error: ' . $e->getMessage());
     redirect('register.php');
 }
