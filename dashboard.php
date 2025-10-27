@@ -128,6 +128,12 @@ function nf($n) {
       <h2 class="mb-0">ยอดขาย (Retail DW) — Dashboard</h2>
       <span class="sub-title">แหล่งข้อมูล: MySQL (mysqli)</span>
     </div>
+  <div>
+        <span class="sub-title me-3">แหล่งข้อมูล: MySQL (mysqli)</span>
+        <a href="logout.php" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
+        </a>
+      </div>
 
     <?php if ($data['error']): ?>
       <div class="alert alert-danger">
